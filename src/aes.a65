@@ -1,0 +1,57 @@
+//======================================================================
+// aes.a65
+// -------
+// An implementation of the AES-128 block cipher (NIST FIPS-197) for
+// the MOS 6502/6510 CPU. The implementation is aimed at low
+// cycles/round.
+//
+// Key and state are stored in zero page using addresses used
+// by the BASIC interpreter. Add code to save/restore these values
+// before calling the code if BASIC operation is something you
+// care about.
+//
+//
+// (c) 2017 Joachim Strömbergson
+//======================================================================
+
+// 16 bytes AES state
+.pc = $30       "State"
+.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+
+// Basic start code.
+.pc = $0801     "Basic uppstart"
+	:BasicUpstart(start)
+
+
+
+// Main program implements a few tests by calling the AES code
+.pc = $1000     "Main code"
+start:
+                lda #$00
+                sta $d020
+                sta $d021
+
+
+
+.pc = $2000     "AES Encipher"
+aes_encipher:
+                sei
+                cli
+                rts
+
+
+.pc = $3000     "AES ecipher"
+aes_decipher:
+                sei
+                cli
+                rts
+
+
+.pc = $4000     "Sboxes"
+sbox:
+.byte $fe, $7d, $80, $ed, $7e, $7b, $ea, $7b, $78, $e7, $74, $75, $e4, $0d, $0a, $e1
+
+//======================================================================
+// aes.a65
+//======================================================================
