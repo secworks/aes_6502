@@ -14,22 +14,15 @@
 // (c) 2017 Joachim Strömbergson
 //======================================================================
 
-// 16 bytes AES state
-.pc = $30       "State"
-state:
-.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-
-// Round counter
-.pc = $78       "Round Counter"
-rctr: .byte $00
-
-
+//------------------------------------------------------------------
 // Basic start code.
+//------------------------------------------------------------------
 .pc = $0801     "Basic uppstart"
 	:BasicUpstart(start)
 
 
-
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 // Main program implements a few tests by calling the AES code
 .pc = $1000     "Main code"
 start:
@@ -42,6 +35,11 @@ start:
 
 
 
+//------------------------------------------------------------------
+// aes_encipher
+// Perform one AES-128 given a block of data written into the
+// state and a key written into the key addresses.
+//------------------------------------------------------------------
 
 .pc = $2000     "AES Encipher"
 aes_encipher:
@@ -62,16 +60,132 @@ aes1:
                 rts
 
 
+//------------------------------------------------------------------
+// SubBytes
+// Replace each byte in the state with a byte in the S-box pointed to
+// by the state byte value.
+//------------------------------------------------------------------
 subbytes:
-                ldx #$0f
-sb1:            ldy state, x
+                ldy state + $0
                 lda sbox, y
-                sta state, x
-                bpl sb1
+                sta state + $0
+
+                ldy state + $1
+                lda sbox, y
+                sta state + $1
+
+                ldy state + $2
+                lda sbox, y
+                sta state + $2
+
+                ldy state + $3
+                lda sbox, y
+                sta state + $3
+
+                ldy state + $4
+                lda sbox, y
+                sta state + $4
+
+                ldy state + $5
+                lda sbox, y
+                sta state + $5
+
+                ldy state + $6
+                lda sbox, y
+                sta state + $6
+
+                ldy state + $7
+                lda sbox, y
+                sta state + $7
+
+                ldy state + $8
+                lda sbox, y
+                sta state + $8
+
+                ldy state + $9
+                lda sbox, y
+                sta state + $9
+
+                ldy state + $a
+                lda sbox, y
+                sta state + $a
+
+                ldy state + $b
+                lda sbox, y
+                sta state + $b
+
+                ldy state + $c
+                lda sbox, y
+                sta state + $c
+
+                ldy state + $d
+                lda sbox, y
+                sta state + $d
+
+                ldy state + $e
+                lda sbox, y
+                sta state + $e
+
+                ldy state + $f
+                lda sbox, y
+                sta state + $f
                 rts
+
+
+//------------------------------------------------------------------
+// ShiftRows
+// Rotate the bytes in the rows of the matrix 0..3 steps left.
+//------------------------------------------------------------------
+shiftrows:
+                // Second row one step left.
+                lda state + $04
+                sta btmp
+                lda state + $05
+                sta state + $04
+                lda state + $06
+                sta state + $05
+                lda state + $07
+                sta state + $06
+                lda btmp
+                sta state + $07
+
+                // Third row two steps left.
+                lda state + $08
+                sta btmp
+                lda state + $09
+                sta btmp + 1
+                lda state + $0a
+                sta state + $08
+                lda state + $0b
+                sta state + $09
+                lda btmp
+                sta state + $0a
+                lda btmp + 1
+                sta state + $0b
+
+                // Fourth row three steps left.
+                lda state + $0c
+                sta btmp
+                lda state + $0d
+                sta btmp + 1
+                lda state + $0e
+                sta btmp + 2
+                lda state + $0f
+                sta state + $0c
+                lda btmp
+                sta state + $0d
+                lda btmp + 1
+                sta state + $0e
+                lda btmp + 2
+                sta state + $0f
+                rts
+
+
+
 
 addroundkey:
                 ldx #$0f
+
 
 
 .pc = $3000     "AES decipher"
@@ -79,6 +193,7 @@ aes_decipher:
                 sei
                 cli
                 rts
+
 
 
 .pc = $4000     "Sboxes"
@@ -164,6 +279,17 @@ exp_key:
 .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+
+// 16 bytes AES state
+.pc = $30       "State"
+state:
+.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+// Round counter
+.pc = $78       "Operational variables"
+rctr: .byte $00
+btmp: .byte $00, $00, $00, $00
 
 
 //======================================================================
