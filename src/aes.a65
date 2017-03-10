@@ -41,6 +41,14 @@ aes_encipher:
                 rts
 
 
+subbytes:
+                ldx #$0f
+sb1:            ldy state, x
+                lda sbox, y
+                sta state, x
+                bpl sb1
+                rts
+
 .pc = $3000     "AES ecipher"
 aes_decipher:
                 sei
