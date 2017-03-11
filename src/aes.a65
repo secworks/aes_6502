@@ -5,6 +5,12 @@
 // the MOS 6502/6510 CPU. The implementation is aimed at low
 // cycles/round.
 //
+// Limitation:
+// Currently will only do encipher operation, but one would use
+// a cipher mode that provides deciphering outside of the AES itself.
+// Key expansion is currently not being implemented.
+//
+// Implementation note:
 // Key and state are stored in zero page using addresses used
 // by the BASIC interpreter. Add code to save/restore these values
 // before calling the code if BASIC operation is something you
@@ -268,6 +274,7 @@ addroundkey:
 
 
 //------------------------------------------------------------------
+// AES S-Box.
 //------------------------------------------------------------------
 .pc = $4000     "Sboxes"
 sbox:
@@ -305,7 +312,17 @@ sbox:
 .byte $41, $99, $2d, $0f, $b0, $54, $bb, $16
 
 
-.pc = $6000     "Expanded Keys"
+//------------------------------------------------------------------
+// Zero Page data.
+//------------------------------------------------------------------
+// 16 bytes AES state
+.pc = $30       "State"
+state:
+.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+
+// 160 bytes expanded keys
+.pc = $40     "Expanded Keys"
 exp_key:
 .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
@@ -319,13 +336,8 @@ exp_key:
 .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
 
-// 16 bytes AES state
-.pc = $30       "State"
-state:
-.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-
 // Round counter
-.pc = $78       "Operational variables"
+.pc = $f8       "Operational variables"
 rctr: .byte $00
 btmp: .byte $00, $00, $00, $00
 
