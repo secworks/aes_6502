@@ -50,14 +50,11 @@ start:
 .pc = $2000     "AES Encipher"
 aes_encipher:
                 sei
-
-                // TODO: Key expansion
-
                 lda #$00
                 sta rctr
-aes1:
-                // TODO: AES functions in a loop.
+                sta keyptr
 
+aes1:
                 inc rctr
                 cmp #$0b
                 bne aes1
@@ -201,7 +198,7 @@ mixcolumns:
 // Xor mix a given round key with the round state.
 //------------------------------------------------------------------
 addroundkey:
-                ldx rctr
+                ldx keyptr
                 lda exp_key + $0, x
                 eor state + $0
                 sta state + $0
@@ -268,7 +265,7 @@ addroundkey:
 
                 txa
                 adc $10
-                sta rctr
+                sta keyptr
                 rts
 
 
@@ -338,8 +335,9 @@ exp_key:
 
 // Round counter
 .pc = $f8       "Operational variables"
-rctr: .byte $00
-btmp: .byte $00, $00, $00, $00
+rctr:   .byte $00
+keyptr: .byte $00
+btmp:   .byte $00, $00, $00, $00
 
 
 //======================================================================
