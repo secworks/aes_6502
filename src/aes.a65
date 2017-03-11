@@ -195,6 +195,74 @@ mixcolumns:
 // Xor mix a given round key with the round state.
 //------------------------------------------------------------------
 addroundkey:
+                ldx rctr
+                lda exp_key + $0, x
+                eor state + $0
+                sta state + $0
+
+                lda exp_key + $1, x
+                eor state + $1
+                sta state + $1
+
+                lda exp_key + $2, x
+                eor state + $2
+                sta state + $2
+
+                lda exp_key + $3, x
+                eor state + $3
+                sta state + $3
+
+                lda exp_key + $4, x
+                eor state + $4
+                sta state + $4
+
+                lda exp_key + $5, x
+                eor state + $5
+                sta state + $5
+
+                lda exp_key + $6, x
+                eor state + $6
+                sta state + $6
+
+                lda exp_key + $7, x
+                eor state + $7
+                sta state + $7
+
+                lda exp_key + $8, x
+                eor state + $8
+                sta state + $8
+
+                lda exp_key + $9, x
+                eor state + $9
+                sta state + $9
+
+                lda exp_key + $a, x
+                eor state + $a
+                sta state + $a
+
+                lda exp_key + $b, x
+                eor state + $b
+                sta state + $b
+
+                lda exp_key + $c, x
+                eor state + $c
+                sta state + $c
+
+                lda exp_key + $d, x
+                eor state + $d
+                sta state + $d
+
+                lda exp_key + $e, x
+                eor state + $e
+                sta state + $e
+
+                lda exp_key + $f, x
+                eor state + $f
+                sta state + $f
+
+                txa
+                adc $10
+                sta rctr
                 rts
 
 
