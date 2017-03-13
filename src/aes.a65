@@ -26,7 +26,8 @@
 // State is 16 bytes in size.
 .label state = $30
 
-// Expanded key is 10*16 bytes in size
+// Expanded key is 11*16 bytes in size
+// So will span from $40 to $f0
 .label exp_key = $40
 
 // Round counter
@@ -288,6 +289,13 @@ addroundkey:
                 sta keyptr
                 rts
 
+
+//------------------------------------------------------------------
+// nist_exp_keys
+//
+// Expanded keys from NIST FIPS 197.
+//------------------------------------------------------------------
+nist_exp_keys:
 
 
 //------------------------------------------------------------------
