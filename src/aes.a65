@@ -86,13 +86,15 @@ aes1:
 
 //------------------------------------------------------------------
 // SubBytes
-// Replace each byte in the state with a byte in the S-box pointed to
-// by the state byte value.
+// Replace each byte in the state with a byte in the S-box
+// pointed to by the state byte value.
+//
+// Cycle calc: 10 * 16 + 6 = 166 cycles.
 //------------------------------------------------------------------
 subbytes:
-                ldy state + $0
-                lda sbox, y
-                sta state + $0
+                ldy state + $0 // 3 cycles
+                lda sbox, y    // 4 cycles
+                sta state + $0 // 3 cycles
 
                 ldy state + $1
                 lda sbox, y
@@ -153,7 +155,7 @@ subbytes:
                 ldy state + $f
                 lda sbox, y
                 sta state + $f
-                rts
+                rts              // 6 cycles
 
 
 //------------------------------------------------------------------
