@@ -52,15 +52,60 @@
 // Main program implements a few tests by calling the AES code
 .pc = $1000     "Main code"
 start:
-                jsr test_subbytes
-                rts
-
-
-test_subbytes:
                 inc $d020
-                :print_string($0800, 32, $0400)
+                lda $d018
+                ora #$02
+                sta $d018
+                jsr clear_screen
+                jsr set_state
+                jsr dump_state
                 rts
 
+clear_screen:
+                ldx #$00
+                lda #$20
+l1:             sta $0400,x
+                sta $0500,x
+                sta $0600,x
+                sta $0700,x
+                dex
+                bne l1
+                rts
+
+set_state:
+                lda #$41
+                ldy #$00
+s1:             sta state,y
+                adc #$01
+                iny
+                cpy #$10
+                bne s1
+                rts
+
+
+dump_state:
+                :print_string(aes_state_str, 14, $0400)
+                :print_hexvalue(state + 00, $0428)
+                :print_hexvalue(state + 01, $042b)
+                :print_hexvalue(state + 02, $042e)
+                :print_hexvalue(state + 03, $0431)
+
+                :print_hexvalue(state + 04, $0450)
+                :print_hexvalue(state + 05, $0453)
+                :print_hexvalue(state + 06, $0456)
+                :print_hexvalue(state + 07, $0459)
+
+                :print_hexvalue(state + 08, $0478)
+                :print_hexvalue(state + 09, $047b)
+                :print_hexvalue(state + 10, $047e)
+                :print_hexvalue(state + 11, $0481)
+
+                :print_hexvalue(state + 12, $04a0)
+                :print_hexvalue(state + 13, $04a3)
+                :print_hexvalue(state + 14, $04a6)
+                :print_hexvalue(state + 15, $04a9)
+
+                rts
 
 //------------------------------------------------------------------
 // aes_encipher
@@ -348,8 +393,33 @@ sbox:
 pstr1:          lda str_ptr, x
                 sta screen_ptr, x
                 inx
+                cpx #len
                 bne pstr1
 }
+
+.macro print_hexvalue(byte, screen_ptr)
+{
+                lda byte
+                lsr
+                lsr
+                lsr
+                lsr
+                tax
+                lda hexchars, x
+                sta screen_ptr
+
+                lda byte
+                and #$0f
+                tax
+                lda hexchars, x
+                sta screen_ptr + 1
+}
+
+aes_state_str:
+.text "The AES state:"
+
+hexchars:
+.text "0123456789abcdef"
 
 //======================================================================
 // aes.a65
