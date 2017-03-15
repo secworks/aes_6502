@@ -59,6 +59,8 @@ start:
                 jsr clear_screen
                 jsr set_state
                 jsr dump_state
+                jsr shiftrows
+                jsr dump_state
                 rts
 
 clear_screen:
