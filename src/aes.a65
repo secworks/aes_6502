@@ -208,9 +208,11 @@ subbytes:
 //------------------------------------------------------------------
 // ShiftRows
 // Rotate the bytes in the rows of the matrix 0..3 steps left.
+// 30 + 36 + 30 + 6 = 102 cycles.
 //------------------------------------------------------------------
 shiftrows:
                 // Second row one step left.
+                // 10 * 3 = 30 cycles.
                 lda state + $04
                 sta btmp
                 lda state + $05
@@ -223,6 +225,7 @@ shiftrows:
                 sta state + $07
 
                 // Third row two steps left.
+                // 12 * 3 = 36 cycles
                 lda state + $08
                 sta btmp
                 lda state + $09
@@ -238,6 +241,7 @@ shiftrows:
 
                 // Fourth row three steps left.
                 // Same as one step right.
+                // 10 * 3 = 30 cycles
                 lda state + $0f
                 sta btmp
                 lda state + $0e
@@ -248,6 +252,7 @@ shiftrows:
                 sta state + $0d
                 lda btmp
                 sta state + $0c
+
                 rts
 
 
@@ -262,78 +267,80 @@ mixcolumns:
 
 //------------------------------------------------------------------
 // AddRoundKey
-// Xor mix a given round key with the round state.
+// XOR mix a given round key with the round state.
+// 3 + 16 * 10 + 13 = 176 cycles
 //------------------------------------------------------------------
 addroundkey:
-                ldx keyptr
-                lda exp_key + $0, x
-                eor state + $0
-                sta state + $0
+                ldx keyptr             // 3 cycles
 
-                lda exp_key + $1, x
-                eor state + $1
-                sta state + $1
+                lda exp_key + #$0, x   // 4 cycles
+                eor state + #$0        // 3 cycles
+                sta state + #$0        // 3 cycles
 
-                lda exp_key + $2, x
-                eor state + $2
-                sta state + $2
+                lda exp_key + #$1, x
+                eor state + #$1
+                sta state + #$1
 
-                lda exp_key + $3, x
-                eor state + $3
-                sta state + $3
+                lda exp_key + #$2, x
+                eor state + #$2
+                sta state + #$2
 
-                lda exp_key + $4, x
-                eor state + $4
-                sta state + $4
+                lda exp_key + #$3, x
+                eor state + #$3
+                sta state + #$3
 
-                lda exp_key + $5, x
-                eor state + $5
-                sta state + $5
+                lda exp_key + #$4, x
+                eor state + #$4
+                sta state + #$4
 
-                lda exp_key + $6, x
-                eor state + $6
-                sta state + $6
+                lda exp_key + #$5, x
+                eor state + #$5
+                sta state + #$5
 
-                lda exp_key + $7, x
-                eor state + $7
-                sta state + $7
+                lda exp_key + #$6, x
+                eor state + #$6
+                sta state + #$6
 
-                lda exp_key + $8, x
-                eor state + $8
-                sta state + $8
+                lda exp_key + #$7, x
+                eor state + #$7
+                sta state + #$7
 
-                lda exp_key + $9, x
-                eor state + $9
-                sta state + $9
+                lda exp_key + #$8, x
+                eor state + #$8
+                sta state + #$8
 
-                lda exp_key + $a, x
-                eor state + $a
-                sta state + $a
+                lda exp_key + #$9, x
+                eor state + #$9
+                sta state + #$9
 
-                lda exp_key + $b, x
-                eor state + $b
-                sta state + $b
+                lda exp_key + #$a, x
+                eor state + #$a
+                sta state + #$a
 
-                lda exp_key + $c, x
-                eor state + $c
-                sta state + $c
+                lda exp_key + #$b, x
+                eor state + #$b
+                sta state + #$b
 
-                lda exp_key + $d, x
-                eor state + $d
-                sta state + $d
+                lda exp_key + #$c, x
+                eor state + #$c
+                sta state + #$c
 
-                lda exp_key + $e, x
-                eor state + $e
-                sta state + $e
+                lda exp_key + #$d, x
+                eor state + #$d
+                sta state + #$d
 
-                lda exp_key + $f, x
-                eor state + $f
-                sta state + $f
+                lda exp_key + #$e, x
+                eor state + #$e
+                sta state + #$e
 
-                txa
-                adc $10
-                sta keyptr
-                rts
+                lda exp_key + #$f, x
+                eor state + #$f
+                sta state + #$f
+
+                txa                  // 2 cycles
+                adc #$10             // 2 cycles
+                sta keyptr           // 3 cycles
+                rts                  // 6 cycles
 
 
 //------------------------------------------------------------------
