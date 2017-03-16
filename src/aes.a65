@@ -237,20 +237,17 @@ shiftrows:
                 sta state + $0b
 
                 // Fourth row three steps left.
-                lda state + $0c
-                sta btmp
-                lda state + $0d
-                sta btmp + 1
-                lda state + $0e
-                sta btmp + 2
+                // Same as one step right.
                 lda state + $0f
-                sta state + $0c
-                lda btmp
-                sta state + $0d
-                lda btmp + 1
-                sta state + $0e
-                lda btmp + 2
+                sta btmp
+                lda state + $0e
                 sta state + $0f
+                lda state + $0d
+                sta state + $0e
+                lda state + $0c
+                sta state + $0d
+                lda btmp
+                sta state + $0c
                 rts
 
 
