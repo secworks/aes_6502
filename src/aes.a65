@@ -213,45 +213,45 @@ subbytes:
 shiftrows:
                 // Second row one step left.
                 // 10 * 3 = 30 cycles.
-                lda state + $04
+                lda state + 4
                 sta btmp
-                lda state + $05
-                sta state + $04
-                lda state + $06
-                sta state + $05
-                lda state + $07
-                sta state + $06
+                lda state + 5
+                sta state + 4
+                lda state + 6
+                sta state + 5
+                lda state + 7
+                sta state + 6
                 lda btmp
-                sta state + $07
+                sta state + 7
 
                 // Third row two steps left.
                 // 12 * 3 = 36 cycles
-                lda state + $08
+                lda state + 8
                 sta btmp
-                lda state + $09
+                lda state + 9
                 sta btmp + 1
-                lda state + $0a
-                sta state + $08
-                lda state + $0b
-                sta state + $09
+                lda state + 10
+                sta state + 8
+                lda state + 11
+                sta state + 9
                 lda btmp
-                sta state + $0a
+                sta state + 10
                 lda btmp + 1
-                sta state + $0b
+                sta state + 11
 
                 // Fourth row three steps left.
                 // Same as one step right.
                 // 10 * 3 = 30 cycles
-                lda state + $0f
+                lda state + 15
                 sta btmp
-                lda state + $0e
-                sta state + $0f
-                lda state + $0d
-                sta state + $0e
-                lda state + $0c
-                sta state + $0d
+                lda state + 14
+                sta state + 15
+                lda state + 13
+                sta state + 14
+                lda state + 12
+                sta state + 13
                 lda btmp
-                sta state + $0c
+                sta state + 12
 
                 rts
 
@@ -273,69 +273,69 @@ mixcolumns:
 addroundkey:
                 ldx keyptr             // 3 cycles
 
-                lda exp_key + #$0, x   // 4 cycles
-                eor state + #$0        // 3 cycles
-                sta state + #$0        // 3 cycles
+                lda exp_key + 0, x   // 4 cycles
+                eor state + 0        // 3 cycles
+                sta state + 0        // 3 cycles
 
-                lda exp_key + #$1, x
-                eor state + #$1
-                sta state + #$1
+                lda exp_key + 1, x
+                eor state + 1
+                sta state + 1
 
-                lda exp_key + #$2, x
-                eor state + #$2
-                sta state + #$2
+                lda exp_key + 2, x
+                eor state + 2
+                sta state + 2
 
-                lda exp_key + #$3, x
-                eor state + #$3
-                sta state + #$3
+                lda exp_key + 3, x
+                eor state + 3
+                sta state + 3
 
-                lda exp_key + #$4, x
-                eor state + #$4
-                sta state + #$4
+                lda exp_key + 4, x
+                eor state + 4
+                sta state + 4
 
-                lda exp_key + #$5, x
-                eor state + #$5
-                sta state + #$5
+                lda exp_key + 5, x
+                eor state + 5
+                sta state + 5
 
-                lda exp_key + #$6, x
-                eor state + #$6
-                sta state + #$6
+                lda exp_key + 6, x
+                eor state + 6
+                sta state + 6
 
-                lda exp_key + #$7, x
-                eor state + #$7
-                sta state + #$7
+                lda exp_key + 7, x
+                eor state + 7
+                sta state + 7
 
-                lda exp_key + #$8, x
-                eor state + #$8
-                sta state + #$8
+                lda exp_key + 8, x
+                eor state + 8
+                sta state + 8
 
-                lda exp_key + #$9, x
-                eor state + #$9
-                sta state + #$9
+                lda exp_key + 9, x
+                eor state + 9
+                sta state + 9
 
-                lda exp_key + #$a, x
-                eor state + #$a
-                sta state + #$a
+                lda exp_key + 10, x
+                eor state + 10
+                sta state + 10
 
-                lda exp_key + #$b, x
-                eor state + #$b
-                sta state + #$b
+                lda exp_key + 11, x
+                eor state + 11
+                sta state + 11
 
-                lda exp_key + #$c, x
-                eor state + #$c
-                sta state + #$c
+                lda exp_key + 12, x
+                eor state + 12
+                sta state + 12
 
-                lda exp_key + #$d, x
-                eor state + #$d
-                sta state + #$d
+                lda exp_key + 13, x
+                eor state + 13
+                sta state + 13
 
-                lda exp_key + #$e, x
-                eor state + #$e
-                sta state + #$e
+                lda exp_key + 14, x
+                eor state + 14
+                sta state + 14
 
-                lda exp_key + #$f, x
-                eor state + #$f
-                sta state + #$f
+                lda exp_key + 15, x
+                eor state + 15
+                sta state + 15
 
                 txa                  // 2 cycles
                 adc #$10             // 2 cycles
