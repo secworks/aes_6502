@@ -58,9 +58,9 @@ start:
                 sta $d018
                 jsr clear_screen
                 jsr set_state
-                jsr dump_state
+                :print_state_matrix($0428)
                 jsr shiftrows
-                jsr dump_state
+                :print_state_matrix($04f0)
                 rts
 
 clear_screen:
@@ -82,12 +82,6 @@ s1:             sta state,y
                 iny
                 cpy #$10
                 bne s1
-                rts
-
-
-dump_state:
-                :print_string(aes_state_str, 14, $0400)
-                :print_state_matrix($0453)
                 rts
 
 
