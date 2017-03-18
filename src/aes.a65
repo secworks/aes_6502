@@ -58,9 +58,16 @@ start:
                 sta $d018
                 jsr clear_screen
                 jsr set_state
+                :print_string(aes_state_str, 10, $0400)
                 :print_state_matrix($0428)
+
+                jsr subbytes
+                :print_string(subbytes_str, 9, $0410)
+                :print_state_matrix($0438)
+
                 jsr shiftrows
-                :print_state_matrix($04f0)
+                :print_string(shiftrows_str, 10, $04f0)
+                :print_state_matrix($0518)
                 rts
 
 clear_screen:
@@ -91,7 +98,7 @@ s1:             sta state,y
 // state and a key written into the key addresses.
 //------------------------------------------------------------------
 
-.pc = $2000     "AES Encipher"
+.pc = $3000     "AES Encipher"
 aes_encipher:
                 sei
                 lda #$00
@@ -369,6 +376,40 @@ sbox:
 //------------------------------------------------------------------
 // Macros.
 //------------------------------------------------------------------
+// Galois Multiplication by two.
+.macro gm2(byte, res)
+{
+                lda byte
+                asl
+                bcs gm2_1
+                adc #$1b
+gm2_1:          sta res
+}
+
+// Galois mult by three.
+.macro gm3(byte, res)
+{
+                lda byte
+                asl
+                bcs gm3_1
+                adc #$1b
+gm3_1:          eor byte
+                sta res
+}
+
+
+.macro mixc(b0, b1, b2, b3, dest)
+{
+                :gm2(b0, btmp)
+                :gm3(b1, btmp + 1)
+                lda btmp
+                eor btmp + 1
+                eor b2
+                eor b3
+                sta dest
+}
+
+
 .macro print_string(str_ptr, len, screen_ptr)
 {
                 ldx #$00
@@ -422,7 +463,19 @@ pstr1:          lda str_ptr, x
 }
 
 aes_state_str:
-.text "The AES state:"
+.text "AES state:"
+
+subbytes_str:
+.text "SubBytes:"
+
+shiftrows_str:
+.text "ShiftRows:"
+
+mixcolumns_str:
+.text "MixColumns:"
+
+addroundkey_str:
+.text "AddRoundKey:"
 
 hexchars:
 .text "0123456789abcdef"
