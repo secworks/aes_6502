@@ -36,7 +36,7 @@
 // Key pointer
 .label keyptr = $f9
 
-// Block temp values. At least 4 bytes in size.
+// Block temp values. 6 bytes in size ($fa .. $ff).
 .label btmp = $fa
 
 
@@ -44,7 +44,7 @@
 // Basic start code.
 //------------------------------------------------------------------
 .pc = $0801     "Basic uppstart"
-	:BasicUpstart(start)
+	        :BasicUpstart(start)
 
 
 //------------------------------------------------------------------
@@ -126,69 +126,22 @@ aes1:
 // Cycle calc: 10 * 16 + 6 = 166 cycles.
 //------------------------------------------------------------------
 subbytes:
-                ldy state + $0 // 3 cycles
-                lda sbox, y    // 4 cycles
-                sta state + $0 // 3 cycles
-
-                ldy state + $1
-                lda sbox, y
-                sta state + $1
-
-                ldy state + $2
-                lda sbox, y
-                sta state + $2
-
-                ldy state + $3
-                lda sbox, y
-                sta state + $3
-
-                ldy state + $4
-                lda sbox, y
-                sta state + $4
-
-                ldy state + $5
-                lda sbox, y
-                sta state + $5
-
-                ldy state + $6
-                lda sbox, y
-                sta state + $6
-
-                ldy state + $7
-                lda sbox, y
-                sta state + $7
-
-                ldy state + $8
-                lda sbox, y
-                sta state + $8
-
-                ldy state + $9
-                lda sbox, y
-                sta state + $9
-
-                ldy state + $a
-                lda sbox, y
-                sta state + $a
-
-                ldy state + $b
-                lda sbox, y
-                sta state + $b
-
-                ldy state + $c
-                lda sbox, y
-                sta state + $c
-
-                ldy state + $d
-                lda sbox, y
-                sta state + $d
-
-                ldy state + $e
-                lda sbox, y
-                sta state + $e
-
-                ldy state + $f
-                lda sbox, y
-                sta state + $f
+                :sbyte(state + 0)
+                :sbyte(state + 1)
+                :sbyte(state + 2)
+                :sbyte(state + 3)
+                :sbyte(state + 4)
+                :sbyte(state + 5)
+                :sbyte(state + 6)
+                :sbyte(state + 7)
+                :sbyte(state + 8)
+                :sbyte(state + 9)
+                :sbyte(state + 10)
+                :sbyte(state + 11)
+                :sbyte(state + 12)
+                :sbyte(state + 13)
+                :sbyte(state + 14)
+                :sbyte(state + 15)
                 rts              // 6 cycles
 
 
@@ -260,76 +213,27 @@ mixcolumns:
 // 3 + 16 * 10 + 13 = 176 cycles
 //------------------------------------------------------------------
 addroundkey:
-                ldx keyptr             // 3 cycles
-
-                lda exp_key + 0, x   // 4 cycles
-                eor state + 0        // 3 cycles
-                sta state + 0        // 3 cycles
-
-                lda exp_key + 1, x
-                eor state + 1
-                sta state + 1
-
-                lda exp_key + 2, x
-                eor state + 2
-                sta state + 2
-
-                lda exp_key + 3, x
-                eor state + 3
-                sta state + 3
-
-                lda exp_key + 4, x
-                eor state + 4
-                sta state + 4
-
-                lda exp_key + 5, x
-                eor state + 5
-                sta state + 5
-
-                lda exp_key + 6, x
-                eor state + 6
-                sta state + 6
-
-                lda exp_key + 7, x
-                eor state + 7
-                sta state + 7
-
-                lda exp_key + 8, x
-                eor state + 8
-                sta state + 8
-
-                lda exp_key + 9, x
-                eor state + 9
-                sta state + 9
-
-                lda exp_key + 10, x
-                eor state + 10
-                sta state + 10
-
-                lda exp_key + 11, x
-                eor state + 11
-                sta state + 11
-
-                lda exp_key + 12, x
-                eor state + 12
-                sta state + 12
-
-                lda exp_key + 13, x
-                eor state + 13
-                sta state + 13
-
-                lda exp_key + 14, x
-                eor state + 14
-                sta state + 14
-
-                lda exp_key + 15, x
-                eor state + 15
-                sta state + 15
-
-                txa                  // 2 cycles
-                adc #$10             // 2 cycles
-                sta keyptr           // 3 cycles
-                rts                  // 6 cycles
+                ldx keyptr                              // 3 cycles
+                :eorbyte(state + 0,  exp_key + 0)
+                :eorbyte(state + 1,  exp_key + 1)
+                :eorbyte(state + 2,  exp_key + 2)
+                :eorbyte(state + 3,  exp_key + 3)
+                :eorbyte(state + 4,  exp_key + 4)
+                :eorbyte(state + 5,  exp_key + 5)
+                :eorbyte(state + 6,  exp_key + 6)
+                :eorbyte(state + 7,  exp_key + 7)
+                :eorbyte(state + 8,  exp_key + 8)
+                :eorbyte(state + 9,  exp_key + 9)
+                :eorbyte(state + 10, exp_key + 10)
+                :eorbyte(state + 11, exp_key + 11)
+                :eorbyte(state + 12, exp_key + 12)
+                :eorbyte(state + 13, exp_key + 13)
+                :eorbyte(state + 14, exp_key + 14)
+                :eorbyte(state + 15, exp_key + 15)
+                txa                                     // 2 cycles
+                adc #$10                                // 2 cycles
+                sta keyptr                              // 3 cycles
+                rts                                     // 6 cycles
 
 
 //------------------------------------------------------------------
@@ -382,6 +286,25 @@ sbox:
 //------------------------------------------------------------------
 // Macros.
 //------------------------------------------------------------------
+.macro sbyte(byte)
+{
+                ldy byte                // 3 cycles
+                lda sbox, y             // 4 cycles
+                sta byte                // 3 cycles
+}
+
+
+// XOR the contents of the keybyte with sbyte. The result is
+// stored in sbyte.
+// Note: Assumes that x reg has been set.
+.macro eorbyte(sbyte, keybyte)
+{
+                lda keybyte, x          // 4 cycles
+                eor sbyte               // 3 cycles
+                sta sbyte               // 3 cycles
+}
+
+
 // Galois Multiplication by two.
 .macro gm2(byte, res)
 {
@@ -391,6 +314,7 @@ sbox:
                 adc #$1b
 gm2_1:          sta res
 }
+
 
 // Galois mult by three.
 .macro gm3(byte, res)
@@ -437,7 +361,6 @@ gm3_1:          eor byte
 }
 
 
-
 .macro print_string(str_ptr, len, screen_ptr)
 {
                 ldx #$00
@@ -447,6 +370,7 @@ pstr1:          lda str_ptr, x
                 cpx #len
                 bne pstr1
 }
+
 
 .macro print_state_matrix(screen_ptr)
 {
@@ -490,6 +414,8 @@ pstr1:          lda str_ptr, x
                 sta screen_ptr + 1
 }
 
+
+// Screen Strings.
 aes_state_str:
 .text "AES state:"
 
