@@ -36,7 +36,7 @@
 // Key pointer
 .label keyptr = $f9
 
-// Block temp values is 3 bytes in size.
+// Block temp values. At least 4 bytes in size.
 .label btmp = $fa
 
 
@@ -68,6 +68,10 @@ start:
                 jsr shiftrows
                 :print_string(shiftrows_str, 10, $04f0)
                 :print_state_matrix($0518)
+
+                jsr mixcolumns
+                :print_string(mixcolumns_str, 11, $0500)
+                :print_state_matrix($0528)
                 rts
 
 clear_screen:
@@ -235,7 +239,6 @@ shiftrows:
                 sta state + 13
                 lda btmp
                 sta state + 12
-
                 rts
 
 
@@ -244,8 +247,11 @@ shiftrows:
 // GF mult mix columns together.
 //------------------------------------------------------------------
 mixcolumns:
+                mixc(state + 0, state + 4, state + 8,  state + 12)
+                mixc(state + 1, state + 5, state + 9,  state + 13)
+                mixc(state + 2, state + 6, state + 10, state + 14)
+                mixc(state + 3, state + 7, state + 11, state + 15)
                 rts
-
 
 
 //------------------------------------------------------------------
@@ -398,7 +404,9 @@ gm3_1:          eor byte
 }
 
 
-.macro mixc(b0, b1, b2, b3, dest)
+// mixc. Mixes four bytes to get a new byte.
+// Note: Will modyfy btmp and btmp+1 as part of processing.
+.macro mixb(b0, b1, b2, b3, dest)
 {
                 :gm2(b0, btmp)
                 :gm3(b1, btmp + 1)
@@ -408,6 +416,26 @@ gm3_1:          eor byte
                 eor b3
                 sta dest
 }
+
+
+// mixc. Mixes fou bytes to get four new bytes.
+// Note: Will modyfy btmp..btmp+5 as part of processing.
+.macro mixc(b0, b1, b2, b3)
+{
+                :mixb(b0, b1, b2, b3, btmp + 2)
+                :mixb(b1, b2, b3, b0, btmp + 3)
+                :mixb(b2, b3, b0, b1, btmp + 4)
+                :mixb(b3, b0, b1, b2, btmp + 5)
+                lda btmp + 2
+                sta b0
+                lda btmp + 3
+                sta b1
+                lda btmp + 4
+                sta b2
+                lda btmp + 5
+                sta b3
+}
+
 
 
 .macro print_string(str_ptr, len, screen_ptr)
