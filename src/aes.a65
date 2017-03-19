@@ -108,12 +108,14 @@ aes_encipher:
                 lda #$00
                 sta rctr
                 sta keyptr
-
 aes1:
+                jsr addroundkey
+                jsr subbytes
+                jsr shiftrows
+                jsr mixcolumns
                 inc rctr
                 cmp #$0b
                 bne aes1
-
                 cli
                 rts
 
