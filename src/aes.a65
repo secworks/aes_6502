@@ -28,7 +28,7 @@
 
 // Expanded key is 11*16 bytes in size
 // So will span from $40 to $f0
-.label exp_key = $40
+.label exp_keys = $40
 
 // Round counter
 .label rctr = $f8
@@ -38,251 +38,6 @@
 
 // Block temp values. 6 bytes in size ($fa .. $ff).
 .label btmp = $fa
-
-
-//------------------------------------------------------------------
-// Basic start code.
-//------------------------------------------------------------------
-.pc = $0801     "Basic uppstart"
-	        :BasicUpstart(start)
-
-
-//------------------------------------------------------------------
-//------------------------------------------------------------------
-// Main program implements a few tests by calling the AES code
-.pc = $1000     "Main code"
-start:
-                inc $d020
-                lda $d018
-                ora #$02
-                sta $d018
-                jsr clear_screen
-                jsr set_state
-                :print_string(aes_state_str, 10, $0400)
-                :print_state_matrix($0428)
-
-                jsr subbytes
-                :print_string(subbytes_str, 9, $0410)
-                :print_state_matrix($0438)
-
-                jsr shiftrows
-                :print_string(shiftrows_str, 10, $04f0)
-                :print_state_matrix($0518)
-
-                jsr mixcolumns
-                :print_string(mixcolumns_str, 11, $0500)
-                :print_state_matrix($0528)
-                rts
-
-clear_screen:
-                ldx #$00
-                lda #$20
-l1:             sta $0400,x
-                sta $0500,x
-                sta $0600,x
-                sta $0700,x
-                dex
-                bne l1
-                rts
-
-set_state:
-                lda #$41
-                ldy #$00
-s1:             sta state,y
-                adc #$01
-                iny
-                cpy #$10
-                bne s1
-                rts
-
-
-//------------------------------------------------------------------
-// aes_encipher
-// Perform one AES-128 given a block of data written into the
-// state and a key written into the key addresses.
-//------------------------------------------------------------------
-
-.pc = $3000     "AES Encipher"
-aes_encipher:
-                sei
-                lda #$00
-                sta rctr
-                sta keyptr
-aes1:
-                jsr addroundkey
-                jsr subbytes
-                jsr shiftrows
-                jsr mixcolumns
-                inc rctr
-                cmp #$0b
-                bne aes1
-                cli
-                rts
-
-
-//------------------------------------------------------------------
-// SubBytes
-// Replace each byte in the state with a byte in the S-box
-// pointed to by the state byte value.
-//
-// Cycle calc: 10 * 16 + 6 = 166 cycles.
-//------------------------------------------------------------------
-subbytes:
-                :sbyte(state + 0)
-                :sbyte(state + 1)
-                :sbyte(state + 2)
-                :sbyte(state + 3)
-                :sbyte(state + 4)
-                :sbyte(state + 5)
-                :sbyte(state + 6)
-                :sbyte(state + 7)
-                :sbyte(state + 8)
-                :sbyte(state + 9)
-                :sbyte(state + 10)
-                :sbyte(state + 11)
-                :sbyte(state + 12)
-                :sbyte(state + 13)
-                :sbyte(state + 14)
-                :sbyte(state + 15)
-                rts              // 6 cycles
-
-
-//------------------------------------------------------------------
-// ShiftRows
-// Rotate the bytes in the rows of the matrix 0..3 steps left.
-// 30 + 36 + 30 + 6 = 102 cycles.
-//------------------------------------------------------------------
-shiftrows:
-                // Second row one step left.
-                // 10 * 3 = 30 cycles.
-                lda state + 4
-                sta btmp
-                lda state + 5
-                sta state + 4
-                lda state + 6
-                sta state + 5
-                lda state + 7
-                sta state + 6
-                lda btmp
-                sta state + 7
-
-                // Third row two steps left.
-                // 12 * 3 = 36 cycles
-                lda state + 8
-                sta btmp
-                lda state + 9
-                sta btmp + 1
-                lda state + 10
-                sta state + 8
-                lda state + 11
-                sta state + 9
-                lda btmp
-                sta state + 10
-                lda btmp + 1
-                sta state + 11
-
-                // Fourth row three steps left.
-                // Same as one step right.
-                // 10 * 3 = 30 cycles
-                lda state + 15
-                sta btmp
-                lda state + 14
-                sta state + 15
-                lda state + 13
-                sta state + 14
-                lda state + 12
-                sta state + 13
-                lda btmp
-                sta state + 12
-                rts
-
-
-//------------------------------------------------------------------
-// MixColumns
-// GF mult mix columns together.
-//------------------------------------------------------------------
-mixcolumns:
-                mixc(state + 0, state + 4, state + 8,  state + 12)
-                mixc(state + 1, state + 5, state + 9,  state + 13)
-                mixc(state + 2, state + 6, state + 10, state + 14)
-                mixc(state + 3, state + 7, state + 11, state + 15)
-                rts
-
-
-//------------------------------------------------------------------
-// AddRoundKey
-// XOR mix a given round key with the round state.
-// 3 + 16 * 10 + 13 = 176 cycles
-//------------------------------------------------------------------
-addroundkey:
-                ldx keyptr                              // 3 cycles
-                :eorbyte(state + 0,  exp_key + 0)
-                :eorbyte(state + 1,  exp_key + 1)
-                :eorbyte(state + 2,  exp_key + 2)
-                :eorbyte(state + 3,  exp_key + 3)
-                :eorbyte(state + 4,  exp_key + 4)
-                :eorbyte(state + 5,  exp_key + 5)
-                :eorbyte(state + 6,  exp_key + 6)
-                :eorbyte(state + 7,  exp_key + 7)
-                :eorbyte(state + 8,  exp_key + 8)
-                :eorbyte(state + 9,  exp_key + 9)
-                :eorbyte(state + 10, exp_key + 10)
-                :eorbyte(state + 11, exp_key + 11)
-                :eorbyte(state + 12, exp_key + 12)
-                :eorbyte(state + 13, exp_key + 13)
-                :eorbyte(state + 14, exp_key + 14)
-                :eorbyte(state + 15, exp_key + 15)
-                txa                                     // 2 cycles
-                adc #$10                                // 2 cycles
-                sta keyptr                              // 3 cycles
-                rts                                     // 6 cycles
-
-
-//------------------------------------------------------------------
-// nist_exp_keys
-//
-// Expanded keys from NIST FIPS 197.
-//------------------------------------------------------------------
-nist_exp_keys:
-
-
-//------------------------------------------------------------------
-// AES S-Box.
-//------------------------------------------------------------------
-.pc = $4000     "Sboxes"
-sbox:
-.byte $63, $7c, $77, $7b, $f2, $6b, $6f, $c5
-.byte $30, $01, $67, $2b, $fe, $d7, $ab, $76
-.byte $ca, $82, $c9, $7d, $fa, $59, $47, $f0
-.byte $ad, $d4, $a2, $af, $9c, $a4, $72, $c0
-.byte $b7, $fd, $93, $26, $36, $3f, $f7, $cc
-.byte $34, $a5, $e5, $f1, $71, $d8, $31, $15
-.byte $04, $c7, $23, $c3, $18, $96, $05, $9a
-.byte $07, $12, $80, $e2, $eb, $27, $b2, $75
-.byte $09, $83, $2c, $1a, $1b, $6e, $5a, $a0
-.byte $52, $3b, $d6, $b3, $29, $e3, $2f, $84
-.byte $53, $d1, $00, $ed, $20, $fc, $b1, $5b
-.byte $6a, $cb, $be, $39, $4a, $4c, $58, $cf
-.byte $d0, $ef, $aa, $fb, $43, $4d, $33, $85
-.byte $45, $f9, $02, $7f, $50, $3c, $9f, $a8
-.byte $51, $a3, $40, $8f, $92, $9d, $38, $f5
-.byte $bc, $b6, $da, $21, $10, $ff, $f3, $d2
-.byte $cd, $0c, $13, $ec, $5f, $97, $44, $17
-.byte $c4, $a7, $7e, $3d, $64, $5d, $19, $73
-.byte $60, $81, $4f, $dc, $22, $2a, $90, $88
-.byte $46, $ee, $b8, $14, $de, $5e, $0b, $db
-.byte $e0, $32, $3a, $0a, $49, $06, $24, $5c
-.byte $c2, $d3, $ac, $62, $91, $95, $e4, $79
-.byte $e7, $c8, $37, $6d, $8d, $d5, $4e, $a9
-.byte $6c, $56, $f4, $ea, $65, $7a, $ae, $08
-.byte $ba, $78, $25, $2e, $1c, $a6, $b4, $c6
-.byte $e8, $dd, $74, $1f, $4b, $bd, $8b, $8a
-.byte $70, $3e, $b5, $66, $48, $03, $f6, $0e
-.byte $61, $35, $57, $b9, $86, $c1, $1d, $9e
-.byte $e1, $f8, $98, $11, $69, $d9, $8e, $94
-.byte $9b, $1e, $87, $e9, $ce, $55, $28, $df
-.byte $8c, $a1, $89, $0d, $bf, $e6, $42, $68
-.byte $41, $99, $2d, $0f, $b0, $54, $bb, $16
 
 
 //------------------------------------------------------------------
@@ -417,6 +172,264 @@ pstr1:          lda str_ptr, x
 }
 
 
+//------------------------------------------------------------------
+// Basic start code.
+//------------------------------------------------------------------
+.pc = $0801     "Basic uppstart"
+	        :BasicUpstart(start)
+
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------
+// Main program implements a few tests by calling the AES code
+.pc = $1000     "Main code"
+start:
+                inc $d020
+                lda $d018
+                ora #$02
+                sta $d018
+                jsr clear_screen
+                jsr set_state
+                :print_string(aes_state_str, 10, $0400)
+                :print_state_matrix($0428)
+
+                jsr subbytes
+                :print_string(subbytes_str, 9, $0410)
+                :print_state_matrix($0438)
+
+                jsr shiftrows
+                :print_string(shiftrows_str, 10, $04f0)
+                :print_state_matrix($0518)
+
+                jsr mixcolumns
+                :print_string(mixcolumns_str, 11, $0500)
+                :print_state_matrix($0528)
+                rts
+
+clear_screen:
+                ldx #$00
+                lda #$20
+l1:             sta $0400,x
+                sta $0500,x
+                sta $0600,x
+                sta $0700,x
+                dex
+                bne l1
+                rts
+
+set_state:
+                lda #$41
+                ldy #$00
+s1:             sta state,y
+                adc #$01
+                iny
+                cpy #$10
+                bne s1
+                rts
+
+
+//------------------------------------------------------------------
+// init_aes
+// Copy expanded keys into the exp_keys area.
+// Write the plaintext to the state.
+//------------------------------------------------------------------
+init_aes:
+                ldx #$00
+init1:          lda fips_keys, x
+                sta exp_keys, x
+                inx
+                cpx #$b0
+                bne init1
+
+                ldx #$00
+init2:          lda plaintext, x
+                sta state, x
+                inx
+                cpx #$10
+                bne init2
+                rts
+
+
+//------------------------------------------------------------------
+// aes_encipher
+// Perform one AES-128 given a block of data written into the
+// state and a key written into the key addresses.
+//------------------------------------------------------------------
+
+.pc = $3000     "AES Encipher"
+aes_encipher:
+                sei
+                lda #$00
+                sta rctr
+                sta keyptr
+aes1:
+                jsr addroundkey
+                jsr subbytes
+                jsr shiftrows
+                jsr mixcolumns
+                inc rctr
+                cmp #$0b
+                bne aes1
+                cli
+                rts
+
+
+//------------------------------------------------------------------
+// SubBytes
+// Replace each byte in the state with a byte in the S-box
+// pointed to by the state byte value.
+//
+// Cycle calc: 10 * 16 + 6 = 166 cycles.
+//------------------------------------------------------------------
+subbytes:
+                :sbyte(state + 0)
+                :sbyte(state + 1)
+                :sbyte(state + 2)
+                :sbyte(state + 3)
+                :sbyte(state + 4)
+                :sbyte(state + 5)
+                :sbyte(state + 6)
+                :sbyte(state + 7)
+                :sbyte(state + 8)
+                :sbyte(state + 9)
+                :sbyte(state + 10)
+                :sbyte(state + 11)
+                :sbyte(state + 12)
+                :sbyte(state + 13)
+                :sbyte(state + 14)
+                :sbyte(state + 15)
+                rts              // 6 cycles
+
+
+//------------------------------------------------------------------
+// ShiftRows
+// Rotate the bytes in the rows of the matrix 0..3 steps left.
+// 30 + 36 + 30 + 6 = 102 cycles.
+//------------------------------------------------------------------
+shiftrows:
+                // Second row one step left.
+                // 10 * 3 = 30 cycles.
+                lda state + 4
+                sta btmp
+                lda state + 5
+                sta state + 4
+                lda state + 6
+                sta state + 5
+                lda state + 7
+                sta state + 6
+                lda btmp
+                sta state + 7
+
+                // Third row two steps left.
+                // 12 * 3 = 36 cycles
+                lda state + 8
+                sta btmp
+                lda state + 9
+                sta btmp + 1
+                lda state + 10
+                sta state + 8
+                lda state + 11
+                sta state + 9
+                lda btmp
+                sta state + 10
+                lda btmp + 1
+                sta state + 11
+
+                // Fourth row three steps left.
+                // Same as one step right.
+                // 10 * 3 = 30 cycles
+                lda state + 15
+                sta btmp
+                lda state + 14
+                sta state + 15
+                lda state + 13
+                sta state + 14
+                lda state + 12
+                sta state + 13
+                lda btmp
+                sta state + 12
+                rts
+
+
+//------------------------------------------------------------------
+// MixColumns
+// GF mult mix columns together.
+//------------------------------------------------------------------
+mixcolumns:
+                mixc(state + 0, state + 4, state + 8,  state + 12)
+                mixc(state + 1, state + 5, state + 9,  state + 13)
+                mixc(state + 2, state + 6, state + 10, state + 14)
+                mixc(state + 3, state + 7, state + 11, state + 15)
+                rts
+
+
+//------------------------------------------------------------------
+// AddRoundKey
+// XOR mix a given round key with the round state.
+// 3 + 16 * 10 + 13 = 176 cycles
+//------------------------------------------------------------------
+addroundkey:
+                ldx keyptr                              // 3 cycles
+                :eorbyte(state + 0,  exp_keys + 0)
+                :eorbyte(state + 1,  exp_keys + 1)
+                :eorbyte(state + 2,  exp_keys + 2)
+                :eorbyte(state + 3,  exp_keys + 3)
+                :eorbyte(state + 4,  exp_keys + 4)
+                :eorbyte(state + 5,  exp_keys + 5)
+                :eorbyte(state + 6,  exp_keys + 6)
+                :eorbyte(state + 7,  exp_keys + 7)
+                :eorbyte(state + 8,  exp_keys + 8)
+                :eorbyte(state + 9,  exp_keys + 9)
+                :eorbyte(state + 10, exp_keys + 10)
+                :eorbyte(state + 11, exp_keys + 11)
+                :eorbyte(state + 12, exp_keys + 12)
+                :eorbyte(state + 13, exp_keys + 13)
+                :eorbyte(state + 14, exp_keys + 14)
+                :eorbyte(state + 15, exp_keys + 15)
+                txa                                     // 2 cycles
+                adc #$10                                // 2 cycles
+                sta keyptr                              // 3 cycles
+                rts                                     // 6 cycles
+
+
+//------------------------------------------------------------------
+// AES S-Box.
+//------------------------------------------------------------------
+.pc = $4000     "Sboxes"
+sbox:
+.byte $63, $7c, $77, $7b, $f2, $6b, $6f, $c5
+.byte $30, $01, $67, $2b, $fe, $d7, $ab, $76
+.byte $ca, $82, $c9, $7d, $fa, $59, $47, $f0
+.byte $ad, $d4, $a2, $af, $9c, $a4, $72, $c0
+.byte $b7, $fd, $93, $26, $36, $3f, $f7, $cc
+.byte $34, $a5, $e5, $f1, $71, $d8, $31, $15
+.byte $04, $c7, $23, $c3, $18, $96, $05, $9a
+.byte $07, $12, $80, $e2, $eb, $27, $b2, $75
+.byte $09, $83, $2c, $1a, $1b, $6e, $5a, $a0
+.byte $52, $3b, $d6, $b3, $29, $e3, $2f, $84
+.byte $53, $d1, $00, $ed, $20, $fc, $b1, $5b
+.byte $6a, $cb, $be, $39, $4a, $4c, $58, $cf
+.byte $d0, $ef, $aa, $fb, $43, $4d, $33, $85
+.byte $45, $f9, $02, $7f, $50, $3c, $9f, $a8
+.byte $51, $a3, $40, $8f, $92, $9d, $38, $f5
+.byte $bc, $b6, $da, $21, $10, $ff, $f3, $d2
+.byte $cd, $0c, $13, $ec, $5f, $97, $44, $17
+.byte $c4, $a7, $7e, $3d, $64, $5d, $19, $73
+.byte $60, $81, $4f, $dc, $22, $2a, $90, $88
+.byte $46, $ee, $b8, $14, $de, $5e, $0b, $db
+.byte $e0, $32, $3a, $0a, $49, $06, $24, $5c
+.byte $c2, $d3, $ac, $62, $91, $95, $e4, $79
+.byte $e7, $c8, $37, $6d, $8d, $d5, $4e, $a9
+.byte $6c, $56, $f4, $ea, $65, $7a, $ae, $08
+.byte $ba, $78, $25, $2e, $1c, $a6, $b4, $c6
+.byte $e8, $dd, $74, $1f, $4b, $bd, $8b, $8a
+.byte $70, $3e, $b5, $66, $48, $03, $f6, $0e
+.byte $61, $35, $57, $b9, $86, $c1, $1d, $9e
+.byte $e1, $f8, $98, $11, $69, $d9, $8e, $94
+.byte $9b, $1e, $87, $e9, $ce, $55, $28, $df
+.byte $8c, $a1, $89, $0d, $bf, $e6, $42, $68
+.byte $41, $99, $2d, $0f, $b0, $54, $bb, $16
+
 // Screen Strings.
 aes_state_str:
 .text "AES state:"
@@ -435,6 +448,25 @@ addroundkey_str:
 
 hexchars:
 .text "0123456789abcdef"
+
+plaintext:
+.byte $00, $11, $22, $33, $44, $55, $66, $77, $88, $99, $aa, $bb, $cc, $dd, $ee, $ff
+
+ciphertext:
+.byte $69, $c4, $e0, $d8, $6a, $7b, $04, $30, $d8, $cd, $b7, $80, $70, $b4, $c5, $5a
+
+fips_keys:
+.byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+.byte $d6, $aa, $74, $fd, $d2, $af, $72, $fa, $da, $a6, $78, $f1, $d6, $ab, $76, $fe
+.byte $b6, $92, $cf, $0b, $64, $3d, $bd, $f1, $be, $9b, $c5, $00, $68, $30, $b3, $fe
+.byte $b6, $ff, $74, $4e, $d2, $c2, $c9, $bf, $6c, $59, $0c, $bf, $04, $69, $bf, $41
+.byte $47, $f7, $f7, $bc, $95, $35, $3e, $03, $f9, $6c, $32, $bc, $fd, $05, $8d, $fd
+.byte $3c, $aa, $a3, $e8, $a9, $9f, $9d, $eb, $50, $f3, $af, $57, $ad, $f6, $22, $aa
+.byte $5e, $39, $0f, $7d, $f7, $a6, $92, $96, $a7, $55, $3d, $c1, $0a, $a3, $1f, $6b
+.byte $14, $f9, $70, $1a, $e3, $5f, $e2, $8c, $44, $0a, $df, $4d, $4e, $a9, $c0, $26
+.byte $47, $43, $87, $35, $a4, $1c, $65, $b9, $e0, $16, $ba, $f4, $ae, $bf, $7a, $d2
+.byte $54, $99, $32, $d1, $f0, $85, $57, $68, $10, $93, $ed, $9c, $be, $2c, $97, $4e
+.byte $13, $11, $1d, $7f, $e3, $94, $4a, $17, $f3, $07, $a7, $8b, $4d, $2b, $30, $c5
 
 //======================================================================
 // aes.a65
