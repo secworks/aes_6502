@@ -190,20 +190,7 @@ start:
                 sta $d018
                 jsr clear_screen
                 jsr set_state
-                :print_string(aes_state_str, 10, $0400)
-                :print_state_matrix($0428)
-
-                jsr subbytes
-                :print_string(subbytes_str, 9, $0410)
-                :print_state_matrix($0438)
-
-                jsr shiftrows
-                :print_string(shiftrows_str, 10, $04f0)
-                :print_state_matrix($0518)
-
-                jsr mixcolumns
-                :print_string(mixcolumns_str, 11, $0500)
-                :print_state_matrix($0528)
+//                jsr init_aes
                 rts
 
 clear_screen:
@@ -262,14 +249,15 @@ aes_encipher:
                 lda #$00
                 sta rctr
                 sta keyptr
-aes1:
+
+                :print_string(aes_state_str, 10, $0400)
+                :print_state_matrix($0428)
+
                 jsr addroundkey
-                jsr subbytes
-                jsr shiftrows
-                jsr mixcolumns
-                inc rctr
-                cmp #$0b
-                bne aes1
+
+                :print_string(aes_state_str, 10, $0410)
+                :print_state_matrix($0438)
+
                 cli
                 rts
 
