@@ -190,7 +190,9 @@ start:
                 sta $d018
                 jsr clear_screen
                 jsr set_state
-//                jsr init_aes
+                jsr init_aes
+                jsr restore_zp
+                jsr aes_encipher
                 rts
 
 clear_screen:
@@ -214,22 +216,47 @@ s1:             sta state,y
                 bne s1
                 rts
 
+restore_zp:
+                ldx #$00
+restore1:
+                lda backup_zp_exp_keys, x
+                sta exp_keys, x
+                inx
+                cpx #$b0
+                bne restore1
+
+                ldx #$00
+restore2:
+                lda backup_zp_state, x
+                sta state, x
+                inx
+                cpx #$10
+                bne restore2
+                rts
 
 //------------------------------------------------------------------
 // init_aes
 // Copy expanded keys into the exp_keys area.
 // Write the plaintext to the state.
+// Note that we copy the zp contents to allow us to restoree it.
 //------------------------------------------------------------------
 init_aes:
                 ldx #$00
-init1:          lda fips_keys, x
+init1:
+
+                lda exp_keys, x
+                sta backup_zp_exp_keys, x
+                lda fips_keys, x
                 sta exp_keys, x
                 inx
                 cpx #$b0
                 bne init1
 
                 ldx #$00
-init2:          lda plaintext, x
+init2:
+                lda state, x
+                sta backup_zp_state, x
+                lda plaintext, x
                 sta state, x
                 inx
                 cpx #$10
@@ -455,6 +482,23 @@ fips_keys:
 .byte $47, $43, $87, $35, $a4, $1c, $65, $b9, $e0, $16, $ba, $f4, $ae, $bf, $7a, $d2
 .byte $54, $99, $32, $d1, $f0, $85, $57, $68, $10, $93, $ed, $9c, $be, $2c, $97, $4e
 .byte $13, $11, $1d, $7f, $e3, $94, $4a, $17, $f3, $07, $a7, $8b, $4d, $2b, $30, $c5
+
+// This is where we store the backup of the zero page we use
+// for state and expanded keys.
+backup_zp_exp_keys:
+.byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+.byte $d6, $aa, $74, $fd, $d2, $af, $72, $fa, $da, $a6, $78, $f1, $d6, $ab, $76, $fe
+.byte $b6, $92, $cf, $0b, $64, $3d, $bd, $f1, $be, $9b, $c5, $00, $68, $30, $b3, $fe
+.byte $b6, $ff, $74, $4e, $d2, $c2, $c9, $bf, $6c, $59, $0c, $bf, $04, $69, $bf, $41
+.byte $47, $f7, $f7, $bc, $95, $35, $3e, $03, $f9, $6c, $32, $bc, $fd, $05, $8d, $fd
+.byte $3c, $aa, $a3, $e8, $a9, $9f, $9d, $eb, $50, $f3, $af, $57, $ad, $f6, $22, $aa
+.byte $5e, $39, $0f, $7d, $f7, $a6, $92, $96, $a7, $55, $3d, $c1, $0a, $a3, $1f, $6b
+.byte $14, $f9, $70, $1a, $e3, $5f, $e2, $8c, $44, $0a, $df, $4d, $4e, $a9, $c0, $26
+.byte $47, $43, $87, $35, $a4, $1c, $65, $b9, $e0, $16, $ba, $f4, $ae, $bf, $7a, $d2
+.byte $54, $99, $32, $d1, $f0, $85, $57, $68, $10, $93, $ed, $9c, $be, $2c, $97, $4e
+.byte $13, $11, $1d, $7f, $e3, $94, $4a, $17, $f3, $07, $a7, $8b, $4d, $2b, $30, $c5
+
+backup_zp_state:
 
 //======================================================================
 // aes.a65
