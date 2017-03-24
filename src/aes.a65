@@ -189,12 +189,15 @@ start:
                 ora #$02
                 sta $d018
                 jsr clear_screen
-                jsr set_state
+                jsr save_zp
                 jsr init_aes
-                jsr restore_zp
                 jsr aes_encipher
+                jsr restore_zp
                 rts
 
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 clear_screen:
                 ldx #$00
                 lda #$20
@@ -206,6 +209,8 @@ l1:             sta $0400,x
                 bne l1
                 rts
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 set_state:
                 lda #$41
                 ldy #$00
@@ -216,6 +221,28 @@ s1:             sta state,y
                 bne s1
                 rts
 
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------
+save_zp:
+                ldx #$00
+save1:          lda exp_keys, x
+                sta backup_zp_exp_keys, x
+                inx
+                cpx #$b0
+                bne init1
+
+                ldx #$00
+save2:          lda state, x
+                sta backup_zp_state, x
+                inx
+                cpx #$10
+                bne save2
+                rts
+
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 restore_zp:
                 ldx #$00
 restore1:
@@ -243,9 +270,6 @@ restore2:
 init_aes:
                 ldx #$00
 init1:
-
-                lda exp_keys, x
-                sta backup_zp_exp_keys, x
                 lda fips_keys, x
                 sta exp_keys, x
                 inx
@@ -254,8 +278,6 @@ init1:
 
                 ldx #$00
 init2:
-                lda state, x
-                sta backup_zp_state, x
                 lda plaintext, x
                 sta state, x
                 inx
