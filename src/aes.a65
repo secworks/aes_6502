@@ -184,6 +184,7 @@ pstr1:          lda str_ptr, x
 // Main program implements a few tests by calling the AES code
 .pc = $1000     "Main code"
 start:
+                sei
                 inc $d020
                 lda $d018
                 ora #$02
@@ -193,6 +194,7 @@ start:
                 jsr init_aes
                 jsr aes_encipher
                 jsr restore_zp
+                cli
                 rts
 
 
@@ -230,7 +232,7 @@ save1:          lda exp_keys, x
                 sta backup_zp_exp_keys, x
                 inx
                 cpx #$b0
-                bne init1
+                bne save1
 
                 ldx #$00
 save2:          lda state, x
@@ -294,7 +296,6 @@ init2:
 
 .pc = $3000     "AES Encipher"
 aes_encipher:
-                sei
                 lda #$00
                 sta rctr
                 sta keyptr
@@ -307,7 +308,6 @@ aes_encipher:
                 :print_string(aes_state_str, 10, $0410)
                 :print_state_matrix($0438)
 
-                cli
                 rts
 
 
