@@ -329,17 +329,18 @@ aes_encipher:
                 sta rctr
                 sta keyptr
 
-                jsr addroundkey
                 :print_string(aes_state_str, 10, $0400)
                 :print_state_matrix($0428)
+
+                jsr addroundkey
+
+                :print_string(aes_state_str, 10, $0410)
+                :print_state_matrix($0438)
 
 round_loop:
                 jsr subbytes
                 jsr shiftrows
                 jsr mixcolumns
-
-                :print_string(aes_state_str, 10, $0410)
-                :print_state_matrix($0438)
 
                 rts
 
