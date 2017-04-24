@@ -266,8 +266,7 @@ restore2:
 //------------------------------------------------------------------
 // init_aes
 // Copy expanded keys into the exp_keys area.
-// Write the plaintext to the state.
-// Note that we copy the zp contents to allow us to restoree it.
+// Write the plaintext to the state in correct column order.
 //------------------------------------------------------------------
 init_aes:
                 ldx #$00
@@ -280,11 +279,41 @@ init1:
 
                 ldx #$00
 init2:
-                lda plaintext, x
-                sta state, x
-                inx
-                cpx #$10
-                bne init2
+                lda plaintext + 0
+                sta state + 0
+                lda plaintext + 1
+                sta state + 4
+                lda plaintext + 2
+                sta state + 8
+                lda plaintext + 3
+                sta state + 12
+
+                lda plaintext + 4
+                sta state + 1
+                lda plaintext + 5
+                sta state + 5
+                lda plaintext + 6
+                sta state + 9
+                lda plaintext + 7
+                sta state + 13
+
+                lda plaintext + 8
+                sta state + 2
+                lda plaintext + 9
+                sta state + 6
+                lda plaintext + 10
+                sta state + 10
+                lda plaintext + 11
+                sta state + 14
+
+                lda plaintext + 12
+                sta state + 3
+                lda plaintext + 13
+                sta state + 7
+                lda plaintext + 14
+                sta state + 11
+                lda plaintext + 15
+                sta state + 15
                 rts
 
 
