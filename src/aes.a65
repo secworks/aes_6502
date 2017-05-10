@@ -468,7 +468,8 @@ addroundkey:
                 :eorbyte(state + 13, exp_keys + 7)
                 :eorbyte(state + 14, exp_keys + 11)
                 :eorbyte(state + 15, exp_keys + 15)
-                lda keyptr                              // 3 cycles
+                txa
+                clc
                 adc #$10                                // 2 cycles
                 sta keyptr                              // 3 cycles
                 rts                                     // 6 cycles
