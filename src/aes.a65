@@ -72,7 +72,6 @@
 
 
 // Galois mult by three.
-// TODO: Fix cond jump
 .macro gm3(byte, res)
 {
                 ldx byte
@@ -116,12 +115,23 @@
 
 .macro print_string(str_ptr, len, screen_ptr)
 {
-                ldx #$00
-pstr1:          lda str_ptr, x
-                sta screen_ptr, x
-                inx
-                cpx #len
+                ldy #$00
+pstr1:          lda str_ptr, y
+                sta screen_ptr, y
+                iny
+                cpy #len
                 bne pstr1
+}
+
+
+// Dump the current key in expected matrix format.
+// Note: We currently dump the keyptr instead to check
+// that it is correctly increased.
+.macro print_curr_key(screen_ptr)
+{
+                lda keyptr
+                sta btmp + 1
+                :print_hexvalue(btmp + 1, screen_ptr)
 }
 
 
@@ -156,14 +166,14 @@ pstr1:          lda str_ptr, x
                 lsr
                 lsr
                 lsr
-                tax
-                lda hexchars, x
+                tay
+                lda hexchars, y
                 sta screen_ptr
 
                 lda byte
                 and #$0f
-                tax
-                lda hexchars, x
+                tay
+                lda hexchars, y
                 sta screen_ptr + 1
 }
 
@@ -325,24 +335,24 @@ aes_encipher:
                 sta rctr
                 sta keyptr
 
+                :print_curr_key($0400)
+                jsr addroundkey
+                :print_curr_key($0406)
 
                 jsr addroundkey
+                :print_curr_key($040c)
 
 round_loop:
-
                 jsr subbytes
-
-
                 jsr shiftrows
-
-                :print_string(aes_state_str, 10, $0400)
-                :print_state_matrix($0428)
-
                 jsr mixcolumns
-
-                :print_string(aes_state_str, 10, $0410)
-                :print_state_matrix($0438)
-
+                :print_state_matrix($0430)
+                :print_curr_key($0410)
+                jsr addroundkey
+                :print_curr_key($0416)
+                :print_state_matrix($043d)
+//                :print_string(aes_state_str, 10, $0410)
+//
                 rts
 
 
@@ -458,7 +468,7 @@ addroundkey:
                 :eorbyte(state + 13, exp_keys + 7)
                 :eorbyte(state + 14, exp_keys + 11)
                 :eorbyte(state + 15, exp_keys + 15)
-                txa                                     // 2 cycles
+                lda keyptr                              // 3 cycles
                 adc #$10                                // 2 cycles
                 sta keyptr                              // 3 cycles
                 rts                                     // 6 cycles
