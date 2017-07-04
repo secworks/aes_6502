@@ -16,167 +16,11 @@
 // before calling the code if BASIC operation is something you
 // care about.
 //
+// State is stored as sequence of columns.
+//
 //
 // (c) 2017 Joachim Strömbergson
 //======================================================================
-
-//------------------------------------------------------------------
-// Labels
-//------------------------------------------------------------------
-// State is 16 bytes in size.
-.label state = $30
-
-// Expanded key is 11*16 bytes in size
-// So will span from $40 to $f0
-.label exp_keys = $40
-
-// Round counter
-.label rctr = $f8
-
-// Key pointer
-.label keyptr = $f9
-
-// Block temp values. 6 bytes in size ($fa .. $ff).
-.label btmp = $fa
-
-
-//------------------------------------------------------------------
-// Macros.
-//------------------------------------------------------------------
-.macro sbyte(byte)
-{
-                ldy byte                // 3 cycles
-                lda sbox, y             // 4 cycles
-                sta byte                // 3 cycles
-}
-
-
-// XOR the contents of the keybyte with sbyte. The result is
-// stored in sbyte.
-// Note: Assumes that x reg has been set.
-.macro eorbyte(sbyte, keybyte)
-{
-                lda keybyte, x          // 4 cycles
-                eor sbyte               // 3 cycles
-                sta sbyte               // 3 cycles
-}
-
-
-// Galois Multiplication by two.
-.macro gm2(byte, res)
-{
-                ldx byte
-                lda gm2_table, x
-                sta res
-}
-
-
-// Galois mult by three.
-.macro gm3(byte, res)
-{
-                ldx byte
-                lda gm3_table, x
-                sta res
-}
-
-
-// mixc. Mixes four bytes to get a new byte.
-// Note: Will modyfy btmp and btmp+1 as part of processing.
-.macro mixb(b0, b1, b2, b3, dest)
-{
-                :gm2(b0, btmp)
-                :gm3(b1, btmp + 1)
-                lda btmp
-                eor btmp + 1
-                eor b2
-                eor b3
-                sta dest
-}
-
-
-// mixc. Mixes four bytes to get four new bytes.
-// Note: Will modyfy btmp..btmp+5 as part of processing.
-.macro mixc(b0, b1, b2, b3)
-{
-                :mixb(b0, b1, b2, b3, btmp + 2)
-                :mixb(b1, b2, b3, b0, btmp + 3)
-                :mixb(b2, b3, b0, b1, btmp + 4)
-                :mixb(b3, b0, b1, b2, btmp + 5)
-                lda btmp + 2
-                sta b0
-                lda btmp + 3
-                sta b1
-                lda btmp + 4
-                sta b2
-                lda btmp + 5
-                sta b3
-}
-
-
-.macro print_string(str_ptr, len, screen_ptr)
-{
-                ldy #$00
-pstr1:          lda str_ptr, y
-                sta screen_ptr, y
-                iny
-                cpy #len
-                bne pstr1
-}
-
-
-// Dump the current key in expected matrix format.
-// Note: We currently dump the keyptr instead to check
-// that it is correctly increased.
-.macro print_curr_key(screen_ptr)
-{
-                lda keyptr
-                sta btmp + 1
-                :print_hexvalue(btmp + 1, screen_ptr)
-}
-
-
-.macro print_state_matrix(screen_ptr)
-{
-                :print_hexvalue(state + 00, screen_ptr)
-                :print_hexvalue(state + 01, screen_ptr + 3)
-                :print_hexvalue(state + 02, screen_ptr + 6)
-                :print_hexvalue(state + 03, screen_ptr + 9)
-
-                :print_hexvalue(state + 04, screen_ptr + 40)
-                :print_hexvalue(state + 05, screen_ptr + 43)
-                :print_hexvalue(state + 06, screen_ptr + 46)
-                :print_hexvalue(state + 07, screen_ptr + 49)
-
-                :print_hexvalue(state + 08, screen_ptr + 80)
-                :print_hexvalue(state + 09, screen_ptr + 83)
-                :print_hexvalue(state + 10, screen_ptr + 86)
-                :print_hexvalue(state + 11, screen_ptr + 89)
-
-                :print_hexvalue(state + 12, screen_ptr + 120)
-                :print_hexvalue(state + 13, screen_ptr + 123)
-                :print_hexvalue(state + 14, screen_ptr + 126)
-                :print_hexvalue(state + 15, screen_ptr + 129)
-}
-
-
-.macro print_hexvalue(byte, screen_ptr)
-{
-                lda byte
-                lsr
-                lsr
-                lsr
-                lsr
-                tay
-                lda hexchars, y
-                sta screen_ptr
-
-                lda byte
-                and #$0f
-                tay
-                lda hexchars, y
-                sta screen_ptr + 1
-}
-
 
 //------------------------------------------------------------------
 // Basic start code.
@@ -335,9 +179,12 @@ aes_encipher:
                 sta rctr
                 sta keyptr
 
-                :print_curr_key($0400)
+                :print_curr_key_ptr($0400)
+                :print_state_matrix($0430)
                 jsr addroundkey
-                :print_curr_key($0406)
+                :print_state_matrix($0440)
+                :print_curr_key_ptr($0406)
+                rts
 
                 jsr addroundkey
                 :print_curr_key($040c)
@@ -453,20 +300,20 @@ mixcolumns:
 addroundkey:
                 ldx keyptr                              // 3 cycles
                 :eorbyte(state + 0,  exp_keys + 0)
-                :eorbyte(state + 1,  exp_keys + 4)
-                :eorbyte(state + 2,  exp_keys + 8)
-                :eorbyte(state + 3,  exp_keys + 12)
-                :eorbyte(state + 4,  exp_keys + 1)
+                :eorbyte(state + 1,  exp_keys + 1)
+                :eorbyte(state + 2,  exp_keys + 2)
+                :eorbyte(state + 3,  exp_keys + 3)
+                :eorbyte(state + 4,  exp_keys + 4)
                 :eorbyte(state + 5,  exp_keys + 5)
-                :eorbyte(state + 6,  exp_keys + 9)
-                :eorbyte(state + 7,  exp_keys + 13)
-                :eorbyte(state + 8,  exp_keys + 2)
-                :eorbyte(state + 9,  exp_keys + 6)
+                :eorbyte(state + 6,  exp_keys + 6)
+                :eorbyte(state + 7,  exp_keys + 7)
+                :eorbyte(state + 8,  exp_keys + 8)
+                :eorbyte(state + 9,  exp_keys + 9)
                 :eorbyte(state + 10, exp_keys + 10)
-                :eorbyte(state + 11, exp_keys + 14)
-                :eorbyte(state + 12, exp_keys + 3)
-                :eorbyte(state + 13, exp_keys + 7)
-                :eorbyte(state + 14, exp_keys + 11)
+                :eorbyte(state + 11, exp_keys + 11)
+                :eorbyte(state + 12, exp_keys + 12)
+                :eorbyte(state + 13, exp_keys + 13)
+                :eorbyte(state + 14, exp_keys + 14)
                 :eorbyte(state + 15, exp_keys + 15)
                 txa
                 clc
@@ -641,6 +488,197 @@ backup_zp_exp_keys:
 
 backup_zp_state:
 .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+
+
+//------------------------------------------------------------------
+// Labels
+//------------------------------------------------------------------
+// State is 16 bytes in size.
+.label state = $30
+
+// Expanded key is 11*16 bytes in size
+// So will span from $40 to $f0
+.label exp_keys = $40
+
+// Round counter
+.label rctr = $f8
+
+// Key pointer
+.label keyptr = $f9
+
+// Block temp values. 6 bytes in size ($fa .. $ff).
+.label btmp = $fa
+
+
+//------------------------------------------------------------------
+// Macros.
+//------------------------------------------------------------------
+.macro sbyte(byte)
+{
+                ldy byte                // 3 cycles
+                lda sbox, y             // 4 cycles
+                sta byte                // 3 cycles
+}
+
+
+// XOR the contents of the keybyte with sbyte. The result is
+// stored in sbyte.
+// Note: Assumes that x reg has been set.
+.macro eorbyte(sbyte, keybyte)
+{
+                lda keybyte, x          // 4 cycles
+                eor sbyte               // 3 cycles
+                sta sbyte               // 3 cycles
+}
+
+
+// Galois Multiplication by two.
+.macro gm2(byte, res)
+{
+                ldx byte
+                lda gm2_table, x
+                sta res
+}
+
+
+// Galois mult by three.
+.macro gm3(byte, res)
+{
+                ldx byte
+                lda gm3_table, x
+                sta res
+}
+
+
+// mixc. Mixes four bytes to get a new byte.
+// Note: Will modyfy btmp and btmp+1 as part of processing.
+.macro mixb(b0, b1, b2, b3, dest)
+{
+                :gm2(b0, btmp)
+                :gm3(b1, btmp + 1)
+                lda btmp
+                eor btmp + 1
+                eor b2
+                eor b3
+                sta dest
+}
+
+
+// mixc. Mixes four bytes to get four new bytes.
+// Note: Will modyfy btmp..btmp+5 as part of processing.
+.macro mixc(b0, b1, b2, b3)
+{
+                :mixb(b0, b1, b2, b3, btmp + 2)
+                :mixb(b1, b2, b3, b0, btmp + 3)
+                :mixb(b2, b3, b0, b1, btmp + 4)
+                :mixb(b3, b0, b1, b2, btmp + 5)
+                lda btmp + 2
+                sta b0
+                lda btmp + 3
+                sta b1
+                lda btmp + 4
+                sta b2
+                lda btmp + 5
+                sta b3
+}
+
+
+.macro print_string(str_ptr, len, screen_ptr)
+{
+                ldy #$00
+pstr1:          lda str_ptr, y
+                sta screen_ptr, y
+                iny
+                cpy #len
+                bne pstr1
+}
+
+.macro print_curr_key_ptr(screen_ptr)
+{
+                :print_hexvalue(keyptr, screen_ptr + 3)
+}
+
+
+// Dump the current key in expected matrix format.
+// Note: We currently dump the keyptr instead to check
+// that it is correctly increased.
+.macro print_curr_key(screen_ptr)
+{
+                ldy #$00
+                lda exp_keys
+                clc
+                adc keyptr
+                sta btmp
+//                lda screen_tmp
+//                sta (btmp + 1)
+pl1:
+                :print_hexvalue(btmp, btmp + 1)
+                inc btmp
+                iny
+                cpy #$10
+                bne pl1
+
+//                :print_hexvalue(exp_keys, y, screen_ptr + 3)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 6)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 9)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 40)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 43)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 46)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 49)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 80)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 83)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 86)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 89)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 120)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 123)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 126)
+//                :print_hexvalue(exp_keys, y, screen_ptr + 129)
+//
+}
+
+
+.macro print_state_matrix(screen_ptr)
+{
+                :print_hexvalue(state + 00, screen_ptr)
+                :print_hexvalue(state + 01, screen_ptr + 3)
+                :print_hexvalue(state + 02, screen_ptr + 6)
+                :print_hexvalue(state + 03, screen_ptr + 9)
+
+                :print_hexvalue(state + 04, screen_ptr + 40)
+                :print_hexvalue(state + 05, screen_ptr + 43)
+                :print_hexvalue(state + 06, screen_ptr + 46)
+                :print_hexvalue(state + 07, screen_ptr + 49)
+
+                :print_hexvalue(state + 08, screen_ptr + 80)
+                :print_hexvalue(state + 09, screen_ptr + 83)
+                :print_hexvalue(state + 10, screen_ptr + 86)
+                :print_hexvalue(state + 11, screen_ptr + 89)
+
+                :print_hexvalue(state + 12, screen_ptr + 120)
+                :print_hexvalue(state + 13, screen_ptr + 123)
+                :print_hexvalue(state + 14, screen_ptr + 126)
+                :print_hexvalue(state + 15, screen_ptr + 129)
+}
+
+
+.macro print_hexvalue(byte, screen_ptr)
+{
+                lda byte
+                lsr
+                lsr
+                lsr
+                lsr
+                tay
+                lda hexchars, y
+                sta screen_ptr
+
+                lda byte
+                and #$0f
+                tay
+                lda hexchars, y
+                sta screen_ptr + 1
+}
 
 //======================================================================
 // aes.a65
