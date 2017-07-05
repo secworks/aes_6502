@@ -22,6 +22,9 @@
 // (c) 2017 Joachim Strömbergson
 //======================================================================
 
+#import "display_macros.asm"
+
+
 //------------------------------------------------------------------
 // Basic start code.
 //------------------------------------------------------------------
@@ -581,103 +584,6 @@ backup_zp_state:
                 sta b2
                 lda btmp + 5
                 sta b3
-}
-
-
-.macro print_string(str_ptr, len, screen_ptr)
-{
-                ldy #$00
-pstr1:          lda str_ptr, y
-                sta screen_ptr, y
-                iny
-                cpy #len
-                bne pstr1
-}
-
-.macro print_curr_key_ptr(screen_ptr)
-{
-                :print_hexvalue(keyptr, screen_ptr + 3)
-}
-
-
-// Dump the current key in expected matrix format.
-// Note: We currently dump the keyptr instead to check
-// that it is correctly increased.
-.macro print_curr_key(screen_ptr)
-{
-                ldy #$00
-                lda exp_keys
-                clc
-                adc keyptr
-                sta btmp
-//                lda screen_tmp
-//                sta (btmp + 1)
-pl1:
-                :print_hexvalue(btmp, btmp + 1)
-                inc btmp
-                iny
-                cpy #$10
-                bne pl1
-
-//                :print_hexvalue(exp_keys, y, screen_ptr + 3)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 6)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 9)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 40)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 43)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 46)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 49)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 80)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 83)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 86)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 89)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 120)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 123)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 126)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 129)
-//
-}
-
-
-.macro print_state_matrix(screen_ptr)
-{
-                :print_hexvalue(state + 00, screen_ptr)
-                :print_hexvalue(state + 01, screen_ptr + 3)
-                :print_hexvalue(state + 02, screen_ptr + 6)
-                :print_hexvalue(state + 03, screen_ptr + 9)
-
-                :print_hexvalue(state + 04, screen_ptr + 40)
-                :print_hexvalue(state + 05, screen_ptr + 43)
-                :print_hexvalue(state + 06, screen_ptr + 46)
-                :print_hexvalue(state + 07, screen_ptr + 49)
-
-                :print_hexvalue(state + 08, screen_ptr + 80)
-                :print_hexvalue(state + 09, screen_ptr + 83)
-                :print_hexvalue(state + 10, screen_ptr + 86)
-                :print_hexvalue(state + 11, screen_ptr + 89)
-
-                :print_hexvalue(state + 12, screen_ptr + 120)
-                :print_hexvalue(state + 13, screen_ptr + 123)
-                :print_hexvalue(state + 14, screen_ptr + 126)
-                :print_hexvalue(state + 15, screen_ptr + 129)
-}
-
-
-.macro print_hexvalue(byte, screen_ptr)
-{
-                lda byte
-                lsr
-                lsr
-                lsr
-                lsr
-                tay
-                lda hexchars, y
-                sta screen_ptr
-
-                lda byte
-                and #$0f
-                tay
-                lda hexchars, y
-                sta screen_ptr + 1
 }
 
 //======================================================================
