@@ -74,25 +74,30 @@ pl1:
 //------------------------------------------------------------------
 .macro print_state_matrix(screen_ptr)
 {
-                :print_hexvalue(state + 00, screen_ptr)
-                :print_hexvalue(state + 01, screen_ptr + 3)
-                :print_hexvalue(state + 02, screen_ptr + 6)
-                :print_hexvalue(state + 03, screen_ptr + 9)
+                :print_matrix(state, screen_ptr)
+}
 
-                :print_hexvalue(state + 04, screen_ptr + 40)
-                :print_hexvalue(state + 05, screen_ptr + 43)
-                :print_hexvalue(state + 06, screen_ptr + 46)
-                :print_hexvalue(state + 07, screen_ptr + 49)
 
-                :print_hexvalue(state + 08, screen_ptr + 80)
-                :print_hexvalue(state + 09, screen_ptr + 83)
-                :print_hexvalue(state + 10, screen_ptr + 86)
-                :print_hexvalue(state + 11, screen_ptr + 89)
-
-                :print_hexvalue(state + 12, screen_ptr + 120)
-                :print_hexvalue(state + 13, screen_ptr + 123)
-                :print_hexvalue(state + 14, screen_ptr + 126)
-                :print_hexvalue(state + 15, screen_ptr + 129)
+//------------------------------------------------------------------
+//------------------------------------------------------------------
+.macro print_matrix(mem_array, screen_ptr)
+{
+                :print_hexvalue(mem_array + 00, screen_ptr)
+                :print_hexvalue(mem_array + 01, screen_ptr + 3)
+                :print_hexvalue(mem_array + 02, screen_ptr + 6)
+                :print_hexvalue(mem_array + 03, screen_ptr + 9)
+                :print_hexvalue(mem_array + 04, screen_ptr + 40)
+                :print_hexvalue(mem_array + 05, screen_ptr + 43)
+                :print_hexvalue(mem_array + 06, screen_ptr + 46)
+                :print_hexvalue(mem_array + 07, screen_ptr + 49)
+                :print_hexvalue(mem_array + 08, screen_ptr + 80)
+                :print_hexvalue(mem_array + 09, screen_ptr + 83)
+                :print_hexvalue(mem_array + 10, screen_ptr + 86)
+                :print_hexvalue(mem_array + 11, screen_ptr + 89)
+                :print_hexvalue(mem_array + 12, screen_ptr + 120)
+                :print_hexvalue(mem_array + 13, screen_ptr + 123)
+                :print_hexvalue(mem_array + 14, screen_ptr + 126)
+                :print_hexvalue(mem_array + 15, screen_ptr + 129)
 }
 
 
