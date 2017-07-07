@@ -32,41 +32,10 @@ pstr1:          lda str_ptr, y
 
 //------------------------------------------------------------------
 // Dump the current key in expected matrix format.
-// Note: We currently dump the keyptr instead to check
-// that it is correctly increased.
 //------------------------------------------------------------------
 .macro print_curr_key(screen_ptr)
 {
-                ldy #$00
-                lda exp_keys
-                clc
-                adc keyptr
-                sta btmp
-//                lda screen_tmp
-//                sta (btmp + 1)
-pl1:
-                :print_hexvalue(btmp, btmp + 1)
-                inc btmp
-                iny
-                cpy #$10
-                bne pl1
-
-//                :print_hexvalue(exp_keys, y, screen_ptr + 3)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 6)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 9)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 40)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 43)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 46)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 49)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 80)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 83)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 86)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 89)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 120)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 123)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 126)
-//                :print_hexvalue(exp_keys, y, screen_ptr + 129)
-//
+                :print_matrix(keyptr, screen_ptr)
 }
 
 
