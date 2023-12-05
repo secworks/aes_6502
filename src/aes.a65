@@ -59,7 +59,7 @@ clear_screen:
 l1:             sta $0400,x
                 sta $0500,x
                 sta $0600,x
-                sta $0700,x
+                sta $06e8,x
                 dex
                 bne l1
                 rts
@@ -555,7 +555,7 @@ backup_zp_state:
 
 
 // mixc. Mixes four bytes to get a new byte.
-// Note: Will modyfy btmp and btmp+1 as part of processing.
+// Note: Will modify btmp and btmp+1 as part of processing.
 .macro mixb(b0, b1, b2, b3, dest)
 {
                 :gm2(b0, btmp)
@@ -569,7 +569,7 @@ backup_zp_state:
 
 
 // mixc. Mixes four bytes to get four new bytes.
-// Note: Will modyfy btmp..btmp+5 as part of processing.
+// Note: Will modify btmp..btmp+5 as part of processing.
 .macro mixc(b0, b1, b2, b3)
 {
                 :mixb(b0, b1, b2, b3, btmp + 2)
